@@ -60,35 +60,46 @@ return {
           -- Jump to the definition of the word under your cursor.
           --  This is where a variable was first declared, or where a function is defined, etc.
           --  To jump back, press <C-t>.
-          map('gd', require('telescope.builtin').lsp_definitions, '[G]oto [D]efinition')
+          map('gd', vim.lsp.buf.definition, '[G]oto [D]efinition')
 
           -- Find references for the word under your cursor.
-          map('gr', require('telescope.builtin').lsp_references, '[G]oto [R]eferences')
+          map('gr', vim.lsp.buf.references, '[G]oto [R]eferences')
 
           -- Jump to the implementation of the word under your cursor.
           --  Useful when your language has ways of declaring types without an actual implementation.
-          map('gI', require('telescope.builtin').lsp_implementations, '[G]oto [I]mplementation')
+          map('gI', vim.lsp.buf.implementation, '[G]oto [I]mplementation')
 
           -- Jump to the type of the word under your cursor.
           --  Useful when you're not sure what type a variable is and you want to see
           --  the definition of its *type*, not where it was *defined*.
-          map('<leader>D', require('telescope.builtin').lsp_type_definitions, 'Type [D]efinition')
+          map('<leader>D', vim.lsp.buf.type_definition, 'Type [D]efinition')
 
           -- Fuzzy find all the symbols in your current document.
           --  Symbols are things like variables, functions, types, etc.
-          map('<leader>ds', require('telescope.builtin').lsp_document_symbols, '[D]ocument [S]ymbols')
+          map('<leader>ds', vim.lsp.buf.document_symbol, '[D]ocument [S]ymbols')
 
           -- Fuzzy find all the symbols in your current workspace.
           --  Similar to document symbols, except searches over your entire project.
-          map('<leader>ws', require('telescope.builtin').lsp_dynamic_workspace_symbols, '[W]orkspace [S]ymbols')
+          map('<leader>ws', vim.lsp.buf.workspace_symbol, '[W]orkspace [S]ymbols')
 
           -- Rename the variable under your cursor.
           --  Most Language Servers support renaming across files, etc.
-          map('<leader>rn', vim.lsp.buf.rename, '[R]e[n]ame')
+          map('<leader>cr', vim.lsp.buf.rename, '[R]e[n]ame')
 
           -- Execute a code action, usually your cursor needs to be on top of an error
           -- or a suggestion from your LSP for this to activate.
           map('<leader>ca', vim.lsp.buf.code_action, '[C]ode [A]ction', { 'n', 'x' })
+
+          map(
+            '<leader>cA',
+            vim.lsp.buf.code_action {
+              apply = true,
+              context = {
+                only = { 'source' },
+                diagnostics = {},
+              },
+            }
+          )
 
           -- WARN: This is not Goto Definition, this is Goto Declaration.
           --  For example, in C this would take you to the header.
@@ -137,12 +148,53 @@ return {
 
       -- Change diagnostic symbols in the sign column (gutter)
       if vim.g.have_nerd_font then
-        local signs = { ERROR = '', WARN = '', INFO = '', HINT = '' }
+        -- Define your diagnostic icons
+        local signs = {
+          ERROR = '', -- Error icon
+          WARN = '', -- Warning icon
+          INFO = '', -- Info icon
+          HINT = '', -- Hint icon
+        }
         local diagnostic_signs = {}
+
+        -- Create a table for diagnostic signs
         for type, icon in pairs(signs) do
           diagnostic_signs[vim.diagnostic.severity[type]] = icon
         end
-        vim.diagnostic.config { signs = { text = diagnostic_signs } }
+
+        -- Configure diagnostics
+        vim.diagnostic.config {
+          underline = true,
+          update_in_insert = false,
+          virtual_text = {
+            spacing = 4,
+            source = 'if_many',
+            prefix = '●', -- Fallback prefix
+            -- Uncomment the following lines if your Neovim build supports function prefix
+            prefix = function(diagnostic)
+              local icons = {
+                [vim.diagnostic.severity.ERROR] = diagnostic_signs[vim.diagnostic.severity.ERROR],
+                [vim.diagnostic.severity.WARN] = diagnostic_signs[vim.diagnostic.severity.WARN],
+                [vim.diagnostic.severity.HINT] = diagnostic_signs[vim.diagnostic.severity.HINT],
+                [vim.diagnostic.severity.INFO] = diagnostic_signs[vim.diagnostic.severity.INFO],
+              }
+              return ' ' .. icons[diagnostic.severity]
+            end,
+          },
+          severity_sort = true,
+          signs = {
+            text = diagnostic_signs,
+            severity = {
+              min = vim.diagnostic.severity.HINT,
+            },
+            icons = {
+              [vim.diagnostic.severity.ERROR] = diagnostic_signs[vim.diagnostic.severity.ERROR],
+              [vim.diagnostic.severity.WARN] = diagnostic_signs[vim.diagnostic.severity.WARN],
+              [vim.diagnostic.severity.HINT] = diagnostic_signs[vim.diagnostic.severity.HINT],
+              [vim.diagnostic.severity.INFO] = diagnostic_signs[vim.diagnostic.severity.INFO],
+            },
+          },
+        }
       end
 
       -- LSP servers and clients are able to communicate to each other what features they support.
