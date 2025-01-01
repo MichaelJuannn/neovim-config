@@ -27,7 +27,6 @@ return {
         },
         denols = {
           mason = false,
-          on_attach = on_attach,
           root_dir = require('lspconfig').util.root_pattern('deno.json', 'deno.jsonc'),
         },
         lua_ls = {
@@ -90,8 +89,7 @@ return {
           -- or a suggestion from your LSP for this to activate.
           map('<leader>ca', vim.lsp.buf.code_action, '[C]ode [A]ction', { 'n', 'x' })
 
-          map(
-            '<leader>cA',
+          map('<leader>cA', function()
             vim.lsp.buf.code_action {
               apply = true,
               context = {
@@ -99,7 +97,7 @@ return {
                 diagnostics = {},
               },
             }
-          )
+          end, 'Source Actions', { 'n', 'x' })
 
           -- WARN: This is not Goto Definition, this is Goto Declaration.
           --  For example, in C this would take you to the header.
