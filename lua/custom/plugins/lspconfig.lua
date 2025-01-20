@@ -13,7 +13,7 @@ return {
   {
     'neovim/nvim-lspconfig',
     dependencies = {
-      { 'williamboman/mason.nvim', config = true }, -- NOTE: Must be loaded before dependants
+      { 'williamboman/mason.nvim', opts = {} }, -- NOTE: Must be loaded before dependants
       'williamboman/mason-lspconfig.nvim',
       'WhoIsSethDaniel/mason-tool-installer.nvim',
       { 'j-hui/fidget.nvim', opts = {} },
@@ -34,6 +34,30 @@ return {
             Lua = {
               completion = {
                 callSnippet = 'Replace',
+              },
+            },
+          },
+        },
+        ruff = {
+          cmd_env = { RUFF_TRACE = 'messages' },
+          init_options = {
+            settings = {
+              logLevel = 'error',
+            },
+          },
+          keys = {
+            {
+              '<leader>co',
+              '<cmd>echo ex<cr>',
+              desc = 'Organize Imports',
+            },
+          },
+        },
+        basedpyright = {
+          settings = {
+            basedpyright = {
+              analysis = {
+                typeCheckingMode = 'standard',
               },
             },
           },
@@ -196,6 +220,7 @@ return {
         filetypes_include = {},
       })
 
+      -- Fix hover problem no manual entry
       vim.lsp.handlers['textDocument/hover'] = function(_, result, ctx, config)
         config = config or {}
         config.focus_id = ctx.method
@@ -210,8 +235,6 @@ return {
         return vim.lsp.util.open_floating_preview(markdown_lines, 'markdown', config)
       end
 
-      require('mason').setup()
-
       require('mason-lspconfig').setup {
         handlers = {
           function(server_name)
@@ -219,6 +242,13 @@ return {
             -- This handles overriding only values explicitly passed
             -- by the server configuration above. Useful when disabling
             -- certain features of an LSP (for example, turning off formatting for ts_ls)
+            --
+            --
+            if server_name == 'ruff' then
+              server.on_attach = function(client, bufnr)
+                client.server_capabilities.hoverProvider = false
+              end
+            end
             server.capabilities = vim.tbl_deep_extend('force', {}, capabilities, server.capabilities or {})
             require('lspconfig')[server_name].setup(server)
           end,

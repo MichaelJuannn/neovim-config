@@ -27,6 +27,7 @@ return {
       -- Adjusts spacing to ensure icons are aligned
       nerd_font_variant = 'mono',
     },
+    signature = { enabled = true },
     completion = {
       accept = { auto_brackets = { enabled = true } },
       menu = {
