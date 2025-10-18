@@ -13,7 +13,7 @@ return {
     priority = 1000,
     opts = {},
     init = function()
-      vim.cmd.colorscheme 'kanagawa-dragon'
+      vim.cmd.colorscheme 'catppuccin-mocha'
     end,
   },
 }
